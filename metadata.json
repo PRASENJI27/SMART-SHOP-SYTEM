@@ -1,0 +1,5 @@
+{
+  "name": "SmartShop - Intelligent List Builder",
+  "description": "A high-conversion shopping list creator that uses Gemini to intelligently categorize items and allows one-tap sharing to phone numbers.",
+  "requestFramePermissions": []
+}
