@@ -2,11 +2,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AisleCategory, SmartSuggestion } from "../types";
 
-// Always use direct process.env.API_KEY for initialization as per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get the AI client only when needed
+const getAiClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.warn("SmartShop: API_KEY environment variable is not set. AI features will be limited.");
+  }
+  return new GoogleGenAI({ apiKey: apiKey || "" });
+};
 
 export const categorizeItem = async (itemName: string): Promise<AisleCategory> => {
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Categorize the following grocery item into one of these aisles: ${Object.values(AisleCategory).join(', ')}. Return only the category name. Item: ${itemName}`,
@@ -21,7 +28,10 @@ export const categorizeItem = async (itemName: string): Promise<AisleCategory> =
 };
 
 export const getSmartSuggestions = async (currentItems: string[]): Promise<SmartSuggestion[]> => {
+  if (!currentItems || currentItems.length === 0) return [];
+
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Based on this shopping list: ${currentItems.join(', ')}, suggest 4 additional items that are often bought together with these. Return in JSON format.`,
@@ -44,7 +54,8 @@ export const getSmartSuggestions = async (currentItems: string[]): Promise<Smart
       }
     });
 
-    return JSON.parse(response.text || '[]');
+    const text = response.text;
+    return text ? JSON.parse(text) : [];
   } catch (error) {
     console.error("Gemini Suggestion Error:", error);
     return [];

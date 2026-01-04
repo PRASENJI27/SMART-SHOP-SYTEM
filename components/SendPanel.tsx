@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ShoppingItem } from '../types';
-import { jsPDF } from 'https://esm.sh/jspdf';
+import { jsPDF } from 'jspdf';
 
 interface SendPanelProps {
   isDark: boolean;
