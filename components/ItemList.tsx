@@ -30,13 +30,26 @@ const ItemList: React.FC<ItemListProps> = ({ isDark, items, onDelete, onToggle, 
   }, {} as Record<string, ShoppingItem[]>);
 
   return (
-    <div className="space-y-6">
-      {Object.entries(groupedItems).sort().map(([category, catItems]) => (
-        <div key={category}>
+    <div className="space-y-8">
+      <style>
+        {`
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .item-enter {
+            animation: slideIn 0.3s ease-out forwards;
+          }
+        `}
+      </style>
+      {(Object.entries(groupedItems) as [string, ShoppingItem[]][]).sort().map(([category, catItems]) => (
+        <div key={category} className="item-enter">
           <h3 className={`text-xs font-bold uppercase tracking-widest px-2 mb-3 flex items-center gap-2 transition-colors ${
             isDark ? 'text-slate-500' : 'text-slate-400'
           }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-indigo-600' : 'bg-indigo-400'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              category === 'Categorizing...' ? 'bg-amber-500 animate-pulse' : (isDark ? 'bg-indigo-600' : 'bg-indigo-400')
+            }`}></span>
             {category}
           </h3>
           <div className="space-y-2">
@@ -51,11 +64,11 @@ const ItemList: React.FC<ItemListProps> = ({ isDark, items, onDelete, onToggle, 
                     : isDark
                       ? 'border-slate-800 bg-slate-800/40 hover:border-slate-700 hover:bg-slate-800/60 shadow-lg shadow-black/20'
                       : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md'
-                }`}
+                } ${item.category === 'Categorizing...' ? 'border-dashed opacity-80' : ''}`}
               >
                 <button 
                   onClick={() => onToggle(item.id)}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                     item.completed 
                       ? 'bg-indigo-600 border-indigo-600' 
                       : isDark ? 'border-slate-600 group-hover:border-indigo-500' : 'border-slate-300 group-hover:border-indigo-400'
@@ -78,7 +91,7 @@ const ItemList: React.FC<ItemListProps> = ({ isDark, items, onDelete, onToggle, 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <input
                     type="text"
                     value={item.quantity}

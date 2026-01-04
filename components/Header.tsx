@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ isDark, onToggleTheme }) => {
   return (
-    <div className={`p-8 text-white border-b transition-all duration-500 ${
+    <div className={`p-6 text-white border-b transition-all duration-500 ${
       isDark 
         ? 'bg-gradient-to-br from-indigo-900 via-indigo-950 to-black border-slate-800' 
         : 'bg-gradient-to-br from-indigo-600 to-indigo-700 border-indigo-500/10'
@@ -17,12 +17,12 @@ const Header: React.FC<HeaderProps> = ({ isDark, onToggleTheme }) => {
         <div>
           <div className="flex items-baseline gap-2">
             <h1 className="text-3xl font-extrabold tracking-tight">SmartShop</h1>
-            <span className={`text-[10px] uppercase tracking-tighter opacity-60 font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-100'}`}>
+            <span className={`text-[10px] uppercase tracking-tighter opacity-50 font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-100'}`}>
               Dev: Prasenjit
             </span>
           </div>
-          <p className={`text-sm mt-1 font-medium transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-100'}`}>
-            Intelligent list builder & marketing
+          <p className={`text-sm mt-1 font-medium opacity-80 transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-100'}`}>
+            Intelligent list builder
           </p>
         </div>
         <div className="flex items-center gap-3">

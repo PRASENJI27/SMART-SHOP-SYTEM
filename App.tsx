@@ -19,7 +19,6 @@ const App: React.FC = () => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [inputName, setInputName] = useState('');
   const [inputQty, setInputQty] = useState('1');
-  const [isAdding, setIsAdding] = useState(false);
   const [suggestions, setSuggestions] = useState<{name: string, category: AisleCategory}[]>([]);
 
   // Persist theme and update body class
@@ -37,22 +36,30 @@ const App: React.FC = () => {
     if (e) e.preventDefault();
     if (!inputName.trim()) return;
 
-    setIsAdding(true);
-    // Categorization takes time as it calls Gemini API
-    const category = await categorizeItem(inputName);
+    const nameToCategorize = inputName.trim();
+    const currentId = Math.random().toString(36).substr(2, 9);
     
+    // LIGHTNING FAST: Add item immediately to state
     const newItem: ShoppingItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: inputName.trim(),
+      id: currentId,
+      name: nameToCategorize,
       quantity: inputQty || '1',
-      category,
+      category: 'Categorizing...', // Placeholder while AI works in background
       completed: false
     };
 
     setItems(prev => [...prev, newItem]);
+    
+    // Clear inputs immediately for next item
     setInputName('');
     setInputQty('1');
-    setIsAdding(false);
+
+    // Categorization happens in the background
+    categorizeItem(nameToCategorize).then((category) => {
+      setItems(prev => prev.map(item => 
+        item.id === currentId ? { ...item, category } : item
+      ));
+    });
   };
 
   const handleQuickAdd = async (name: string, category: AisleCategory) => {
@@ -102,7 +109,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 md:p-8 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-slate-50'}`}>
-      <div className={`w-full max-w-2xl rounded-3xl overflow-hidden border transition-all duration-300 shadow-2xl ${
+      <div className={`w-full max-w-2xl rounded-3xl overflow-hidden border transition-all duration-300 shadow-2xl relative ${
         isDark ? 'bg-slate-900 border-slate-800 shadow-indigo-900/10' : 'bg-white border-slate-100 shadow-slate-200'
       }`}>
         <Header isDark={isDark} onToggleTheme={() => setIsDark(!isDark)} />
@@ -115,13 +122,12 @@ const App: React.FC = () => {
                 type="text"
                 value={inputName}
                 onChange={(e) => setInputName(e.target.value)}
-                placeholder={isAdding ? "Categorizing item..." : "What are you buying?"}
-                className={`w-full px-4 py-3 rounded-xl border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${
+                placeholder="What are you buying?"
+                className={`w-full px-4 py-3 text-base rounded-xl border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${
                   isDark 
                     ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' 
                     : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-                } ${isAdding ? 'animate-pulse' : ''}`}
-                disabled={isAdding}
+                }`}
               />
             </div>
             <div className="w-full sm:w-24">
@@ -130,44 +136,21 @@ const App: React.FC = () => {
                 value={inputQty}
                 onChange={(e) => setInputQty(e.target.value)}
                 placeholder="Qty"
-                className={`w-full px-4 py-3 rounded-xl border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${
+                className={`w-full px-4 py-3 text-base text-center rounded-xl border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${
                   isDark 
                     ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' 
                     : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
                 }`}
-                disabled={isAdding}
               />
             </div>
             <button
               type="submit"
-              disabled={isAdding || !inputName.trim()}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 whitespace-nowrap"
+              disabled={!inputName.trim()}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
             >
-              {isAdding ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Thinking...</span>
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                  </svg>
-                  Add Item
-                </>
-              )}
+              Add Item
             </button>
           </form>
-
-          {isAdding && (
-            <p className={`text-[10px] mt-2 font-medium animate-pulse flex items-center gap-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-              <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24">
-                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Gemini AI is categorizing your item...
-            </p>
-          )}
 
           {/* AI Suggestions Chips */}
           {suggestions.length > 0 && (
@@ -203,9 +186,6 @@ const App: React.FC = () => {
                 onClick={clearCompleted}
                 className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-widest flex items-center gap-1.5"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
                 Clear Completed
               </button>
             )}
@@ -213,7 +193,7 @@ const App: React.FC = () => {
         )}
 
         {/* List Content */}
-        <div className="p-2 md:p-4 min-h-[300px]">
+        <div className="p-4 md:p-6 min-h-[300px]">
           <ItemList 
             isDark={isDark}
             items={items} 
@@ -232,10 +212,7 @@ const App: React.FC = () => {
         />
       </div>
       
-      <div className="mt-8 flex flex-col items-center gap-1">
-        <p className={`text-sm transition-colors duration-300 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-          {isDark ? 'Premium Dark Mode' : 'Clean Light Mode'} Active.
-        </p>
+      <div className="mt-8 flex flex-col items-center">
         <p className={`text-[10px] uppercase tracking-widest font-bold opacity-30 ${isDark ? 'text-white' : 'text-black'}`}>
           Developed by Prasenjit
         </p>
